@@ -1,13 +1,11 @@
-import express from "express";
-import multer from "multer";
-import cors from "cors";
-import path from "path";
-import fs from "fs/promises";
-import apiKeyMiddleware from "./middlewares/apiKey.js";
+const express = require("express");
+const multer = require("multer");
+const cors = require("cors");
+const path = require("path");
+const fs = require("fs").promises; // fs/promises can be accessed via fs.promises
+const apiKeyMiddleware = require("./middlewares/apiKey.js");
 
-import { config } from "dotenv";
-
-config();
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,7 +48,9 @@ app.post(
 
       // Return the file path or URL
       res.status(200).json({ url: imageUrl });
+      console.log(200, "POST: /upload");
     } catch (error) {
+      console.log(500, "POST: /upload");
       console.error("Error occurred:", error);
       res.status(500).json({ message: "The image could not be uploaded!" });
     }
@@ -70,8 +70,10 @@ app.post(
 
     try {
       await fs.unlink(imagePath); // Deleting the file
+      console.log(200, "POST: /upload/delete");
       return res.status(200).json({ message: "File Deleted Successfully!" });
     } catch (ex) {
+      console.log(500, "POST: /upload/delete");
       console.log("Something went wrong", ex);
       return res.status(500).json({ error: "The Image could not be deleted!" });
     }

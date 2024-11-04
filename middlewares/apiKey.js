@@ -12,4 +12,4 @@ const apiKeyMiddleware = (req, res, next) => {
   res.status(401).json({ error: "Unauthorized: Invalid API Key" });
 };
 
-export default apiKeyMiddleware;
+module.exports = apiKeyMiddleware;
