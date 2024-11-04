@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
 const { Client } = require("basic-ftp"); // FTP client
-const apiKeyMiddleware = require("./middlewares/apiKey.js");
+const apiKeyMiddleware = require("../middlewares/apiKey.js");
 
 require("dotenv").config();
 
@@ -22,6 +22,10 @@ app.use(cors(corsOptions));
 // Multer storage in memory
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+app.get("/", (req, res) => {
+  res.send("Hello from your serverless Express app!");
+});
 
 // Configure FTP client connection
 async function uploadToFTP(buffer, filename) {
@@ -73,7 +77,9 @@ app.post(
   }
 );
 
+module.exports = app;
+
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server is running on http://localhost:${PORT}`);
+// });
