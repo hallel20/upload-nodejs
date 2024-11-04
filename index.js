@@ -9,7 +9,15 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// Configure CORS to allow requests only from https://www.cyberwizblog.com.ng
+const corsOptions = {
+  origin: "https://www.cyberwizblog.com.ng",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true, // Allow cookies or authorization headers if needed
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 
 // Multer storage in memory
 const storage = multer.memoryStorage();
