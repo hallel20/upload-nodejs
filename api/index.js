@@ -9,14 +9,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Configure CORS to allow requests only from https://www.cyberwizblog.com.ng
-const corsOptions = {
-  origin: "https://www.cyberwizblog.com.ng",
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true,
-  optionsSuccessStatus: 204,
-};
+// const corsOptions = {
+//   origin: "https://www.cyberwizblog.com.ng",
+//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//   credentials: true,
+//   optionsSuccessStatus: 204,
+// };
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Multer storage to save files to a specific directory
 const storage = multer.diskStorage({
@@ -63,6 +63,12 @@ app.post(
 // module.exports = app;
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+if(process.env.NODE_ENV="development") {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}else {
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
