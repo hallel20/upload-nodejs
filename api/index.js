@@ -65,7 +65,7 @@ app.post(
 );
 
 // File delete route
-app.delete("/upload/delete", apiKeyMiddleware, async (req, res) => {
+app.post("/upload/delete", apiKeyMiddleware, async (req, res) => {
   const { filename } = req.body; // Expecting the filename in the request body
 
   if (!filename) {
