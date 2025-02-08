@@ -3,6 +3,7 @@ const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
 const apiKeyMiddleware = require("../middlewares/apiKey.js");
+const fs = require("fs")
 
 require("dotenv").config();
 
@@ -18,6 +19,8 @@ const PORT = process.env.PORT || 5000;
 // };
 
 app.use(cors());
+
+app.use(express.json())
 
 // Serve static files from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -62,10 +65,11 @@ app.post(
       res.status(500).json({ message: "The image could not be uploaded!" });
     }
   }
-);
+); 
 
 // File delete route
 app.post("/upload/delete", apiKeyMiddleware, async (req, res) => {
+  console.log(req.body)
   const { filename } = req.body; // Expecting the filename in the request body
 
   if (!filename) {

@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "test",
-    "start": "node index.js",
-    "dev": "npx nodemon app.js"
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "upload"
+    "url": "https://github.com/hallel20/upload-nodejs"
   },
   "author": "cyberwizdev",
   "license": "ISC",
