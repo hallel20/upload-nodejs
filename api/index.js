@@ -1,7 +1,6 @@
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
-const { Client } = require("basic-ftp"); // FTP client
 const apiKeyMiddleware = require("../middlewares/apiKey.js");
 
 require("dotenv").config();
@@ -13,40 +12,28 @@ const PORT = process.env.PORT || 5000;
 const corsOptions = {
   origin: "https://www.cyberwizblog.com.ng",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true, // Allow cookies or authorization headers if needed
+  credentials: true,
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
 
-// Multer storage in memory
-const storage = multer.memoryStorage();
+// Multer storage to save files to a specific directory
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Save files to the 'uploads' directory
+  },
+  filename: function (req, file, cb) {
+    const filename = Date.now() + file.originalname.replace(/\s+/g, "_");
+    cb(null, filename);
+  },
+});
+
 const upload = multer({ storage });
 
 app.get("/", (req, res) => {
   res.send("Hello from your serverless Express app!");
 });
-
-// Configure FTP client connection
-async function uploadToFTP(buffer, filename) {
-  const client = new Client();
-  try {
-    await client.access({
-      host: process.env.FTP_HOST,
-      user: process.env.FTP_USER,
-      password: process.env.FTP_PASSWORD,
-      secure: false, // Set to true if FTP requires secure connection
-    });
-
-    await client.ensureDir("/uploads"); // Ensure directory exists on the FTP server
-    await client.uploadFrom(buffer, `/uploads/${filename}`); // Upload the file
-  } catch (error) {
-    console.error("FTP Upload Error:", error);
-    throw error;
-  } finally {
-    client.close();
-  }
-}
 
 // File upload route
 app.post(
@@ -59,17 +46,13 @@ app.post(
         return res.status(400).json({ error: "Image cannot be empty!" });
       }
 
-      // Generate unique filename
-      const filename = Date.now() + req.file.originalname.replace(/\s+/g, "_");
+      // Construct the file path
+      const filePath = `uploads/${req.file.filename}`;
 
-      // Upload directly to FTP
-      await uploadToFTP(req.file.buffer, filename);
-
-      // Construct image URL from FTP server path
-      const imageUrl = `${process.env.FTP_BASE_URL}/uploads/${filename}`;
-
-      res.status(200).json({ url: imageUrl });
-      console.log("File uploaded successfully:", imageUrl);
+      res
+        .status(200)
+        .json({ message: "File uploaded successfully!", path: filePath });
+      console.log("File uploaded successfully:", filePath);
     } catch (error) {
       console.error("Error during upload:", error);
       res.status(500).json({ message: "The image could not be uploaded!" });
@@ -77,9 +60,9 @@ app.post(
   }
 );
 
-module.exports = app;
+// module.exports = app;
 
 // Start the server
-// app.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
