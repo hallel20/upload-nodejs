@@ -60,6 +60,27 @@ app.post(
   }
 );
 
+// File delete route
+app.delete("/upload/delete", apiKeyMiddleware, async (req, res) => {
+  const { filename } = req.body; // Expecting the filename in the request body
+
+  if (!filename) {
+    return res.status(400).json({ error: "Filename is required!" });
+  }
+
+  const filePath = path.join(__dirname, "../uploads", filename); // Construct the full file path
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error("Error deleting file:", err);
+      return res.status(500).json({ message: "Could not delete the file!" });
+    }
+
+    res.status(200).json({ message: "File deleted successfully!" });
+    console.log("File deleted successfully:", filename);
+  });
+});
+
 // module.exports = app;
 
 // Start the server
