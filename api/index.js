@@ -18,6 +18,9 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Multer storage to save files to a specific directory
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
