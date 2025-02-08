@@ -9,3 +9,4 @@ services:
       - ./uploads:/usr/src/app/uploads # Mount the uploads directory
     environment:
       - PORT=${PORT}
+      - API_KEY=${API_KEY}
