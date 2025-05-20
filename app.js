@@ -2,86 +2,97 @@ const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
-const fs = require("fs").promises; // fs/promises can be accessed via fs.promises
-const apiKeyMiddleware = require("./middlewares/apiKey.js");
+const fs = require("fs").promises; // Use fs.promises for async operations
+const axios = require("axios"); // For making HTTP requests to your PHP script
+const FormData = require("form-data"); // To construct multipart/form-data
+const apiKeyMiddleware = require("./middlewares/apiKey.js"); // Assuming this is still needed
 
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 app.use(cors());
+//  No need for multer storage here, we're forwarding to PHP
 
-// Configure multer storage for handling file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(process.cwd(), "public/uploads"));
-  },
-  filename: (req, file, cb) => {
-    const filename = Date.now() + file.originalname.replace(/\s+/g, "_");
-    cb(null, filename);
-  },
-});
-
-const upload = multer({ storage });
-
-// Ensure the uploads directory exists
-fs.mkdir(path.join(process.cwd(), "public/uploads"), { recursive: true }).catch(
+// Ensure the uploads directory exists.  This is for local temp storage
+fs.mkdir(path.join(process.cwd(), "temp_uploads"), { recursive: true }).catch(
   console.error
 );
 
-// File upload route
+const tempUpload = multer({ dest: "temp_uploads/" }); // Multer for temp storage
+
+// File upload route, now forwarding to PHP
 app.post(
   "/upload",
   apiKeyMiddleware,
-  upload.single("image"),
+  tempUpload.single("image"), // Use tempUpload middleware
   async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "Image cannot be empty!" });
       }
 
-      // Get file information
-      const filename = req.file.filename;
-      const filePath = `/uploads/${filename}`;
-      const imageUrl = `${req.protocol}://${req.get("host")}${filePath}`;
+      const phpUploadUrl = "https://upload.hallelojowuro.biz"; // **Replace this with your PHP upload URL**
 
-      // Return the file path or URL
-      res.status(200).json({ url: imageUrl });
-      console.log(200, "POST: /upload");
+      const form = new FormData();
+      form.append("image", fs.createReadStream(req.file.path), {
+        filename: req.file.originalname,
+        contentType: req.file.mimetype,
+      });
+
+      const response = await axios.post(phpUploadUrl, form, {
+        headers: form.getHeaders(),
+      });
+
+      // Clean up the temp file
+      await fs.unlink(req.file.path);
+
+      if (response.data.error) {
+        // Handle errors from the PHP script
+        console.error("PHP Upload Error:", response.data.error);
+        return res.status(500).json({ message: response.data.error });
+      }
+
+      console.log(200, "POST: /upload (Forwarded to PHP)");
+      res.status(200).json(response.data); // Return the response from PHP
     } catch (error) {
-      console.log(500, "POST: /upload");
-      console.error("Error occurred:", error);
-      res.status(500).json({ message: "The image could not be uploaded!" });
+      console.error("Error uploading to PHP:", error);
+      res
+        .status(500)
+        .json({ message: "Error occurred while uploading to PHP." });
     }
   }
 );
 
+// File delete route, now forwarding to PHP
 app.post(
   "/upload/delete",
   apiKeyMiddleware,
-  upload.none(),
+  express.json(), //  Use express.json(), as we are sending JSON to PHP
   async (req, res) => {
-    const image = req.body.image; // Expecting the image path relative to the public directory
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const relativePath = image.replace(baseUrl, "");
-    const imageUrl = `public/${relativePath}`; // Correct path for accessing in the public folder
-    const imagePath = path.join(process.cwd(), imageUrl); // Full path to the file
+    const imageToDelete = req.body.image; // Get the URL from the request
+    const phpDeleteUrl = "https://upload.hallelojowuro.biz/delete.php"; // **Replace with your PHP delete URL**
 
     try {
-      await fs.unlink(imagePath); // Deleting the file
-      console.log(200, "POST: /upload/delete");
-      return res.status(200).json({ message: "File Deleted Successfully!" });
-    } catch (ex) {
-      console.log(500, "POST: /upload/delete");
-      console.log("Something went wrong", ex);
-      return res.status(500).json({ error: "The Image could not be deleted!" });
+      const response = await axios.post(phpDeleteUrl, { image: imageToDelete }); // Send image URL to PHP
+
+      if (response.data.error) {
+        console.error("PHP Delete Error", response.data.error);
+        return res.status(500).json({ error: response.data.error });
+      }
+      console.log(200, "POST: /upload/delete (Forwarded to PHP)");
+      res.status(200).json(response.data); // Return response from PHP
+    } catch (error) {
+      console.error("Error deleting via PHP:", error);
+      res
+        .status(500)
+        .json({ message: "The image could not be deleted via PHP!" });
     }
   }
 );
 
-// Static route to serve the uploaded files
-app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
+//  No static serving of /uploads here,  PHP handles that
 
 // Start the server
 app.listen(PORT, () => {
