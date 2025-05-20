@@ -20,4 +20,4 @@ RUN mkdir -p uploads
 EXPOSE 80
 
 # Command to run the application
-CMD ["node", "api/index.js"]
+CMD ["node", "app.js"]
