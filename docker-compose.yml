@@ -5,8 +5,8 @@ services:
       - "8000:80"
       - "8444:443"
     volumes:
-      - /etc/letsencrypt/live/upload.cyberwizdev.com.ng/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
-      - /etc/letsencrypt/live/upload.cyberwizdev.com.ng/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
+      - /etc/letsencrypt/live/upload.cyberwizdev.com.ng-0001/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
+      - /etc/letsencrypt/live/upload.cyberwizdev.com.ng-0001/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - app # Nginx depends on your app service
