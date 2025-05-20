@@ -16,8 +16,5 @@ COPY . .
 # Create the uploads directory
 RUN mkdir -p uploads
 
-# Expose the port the app runs on
-EXPOSE 80
-
 # Command to run the application
 CMD ["node", "app.js"]

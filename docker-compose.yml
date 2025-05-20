@@ -4,8 +4,8 @@ services:
   nginx: # Nginx service
     image: nginx:1.25.1
     ports:
-      - "80:80"
-      - "443:443"
+      - "8000:80"
+      - "8444:443"
     volumes:
       - /etc/letsencrypt/live/upload.cyberwizdev.com.ng/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
       - /etc/letsencrypt/live/upload.cyberwizdev.com.ng/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
